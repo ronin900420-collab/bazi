@@ -543,8 +543,10 @@ body{font-family:'Georgia','Times New Roman',serif;background:var(--paper);color
     <div class="copied" id="copy-confirm">已複製到剪貼簿</div>
     <p id="expire-hint" style="font-size:11px;color:var(--ink3);margin-top:5px;"></p>
   </div>
-  <button class="btn-reset" onclick="resetAll()">重新輸入 / 新客戶</button>
-  <p class="disclaimer" style="margin-top:1rem;">本命盤僅供參考，不代表實際命運，請以積極正面態度面對人生。</p>
+  <div id="owner-controls">
+    <button class="btn-reset" onclick="resetAll()">重新輸入 / 新客戶</button>
+    <p class="disclaimer" style="margin-top:1rem;">本命盤僅供參考，不代表實際命運，請以積極正面態度面對人生。</p>
+  </div>
 </div>
 
 </div><!-- /container -->
@@ -981,9 +983,12 @@ function resetAll(){
 }
 
 function loadReportById(id){
+  document.getElementById('pwd-section').style.display='none';
+  document.getElementById('admin-section-pwd').style.display='none';
   document.getElementById('form-section').style.display='none';
   document.getElementById('loading-section').style.display='block';
   document.getElementById('loading-text').textContent='載入命盤報告……';
+  window._isClientView=true;
   fetch('/api/report?id='+id)
     .then(function(res){return res.json();})
     .then(function(d){
@@ -1014,10 +1019,10 @@ function loadReportById(id){
         return e===-1?rest.trim():rest.slice(0,e).trim();
       }
       renderResult(d.r.base,ex);
-      var linkEl=document.getElementById('share-url');
-      if(linkEl)linkEl.textContent=window.location.href;
-      var hintEl=document.getElementById('expire-hint');
-      if(hintEl)hintEl.textContent=d.expireDays>0?'此連結 '+d.expireDays+' 天後失效':'此連結永久有效';
+      var oc=document.getElementById('owner-controls');
+      if(oc)oc.style.display='none';
+      var lb=document.querySelector('.link-box');
+      if(lb)lb.style.display='none';
     })
     .catch(function(e){
       document.getElementById('loading-section').style.display='none';
