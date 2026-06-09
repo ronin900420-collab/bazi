@@ -536,7 +536,14 @@ function goToAdmin(){
   var d=parseInt(document.getElementById('inp-day').value);
   var h=document.getElementById('inp-hour').value;
   var g=document.getElementById('inp-gender').value;
-  if(!n||!y||!mo||!d||h===''||!g){alert('請填寫所有欄位');return;}
+  var missing=[];
+  if(!n) missing.push('姓名');
+  if(!y||isNaN(y)) missing.push('出生年份');
+  if(!mo||isNaN(mo)) missing.push('出生月份');
+  if(!d||isNaN(d)) missing.push('出生日期');
+  if(h===''||h===null||h===undefined) missing.push('出生時辰');
+  if(!g) missing.push('性別');
+  if(missing.length>0){alert('請填寫：'+missing.join('、'));return;}
   document.getElementById('form-section').style.display='none';
   document.getElementById('admin-section').style.display='block';
 }
