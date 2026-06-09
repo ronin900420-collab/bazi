@@ -730,9 +730,11 @@ async function renderResult(baseRaw,extract){
     {key:'感情姻緣',dot:'#72243E',title:'感情姻緣',badge:'el-fire',badgeTxt:'桃花入命',id:'lo'},
     {key:'運勢建議',dot:'#27500A',title:'運勢建議',badge:'el-wood',badgeTxt:'補木補土',id:'ad'},
   ];
+  console.log('baseRaw preview:', baseRaw ? baseRaw.substring(0,100) : 'EMPTY');
   var basicHtml='';
   sections.forEach(function(s){
     var txt=extract(baseRaw,s.key);
+    console.log('key:', s.key, 'txt:', txt ? txt.substring(0,30) : 'EMPTY');
     var bid='b'+s.id;
     var aid='a'+s.id;
     basicHtml+='<div class="acc-item">';
