@@ -107,8 +107,8 @@ body{font-family:'Georgia','Times New Roman',serif;background:var(--paper);color
 .acc-badge{font-size:10px;padding:2px 7px;border-radius:99px;}
 .acc-arrow{font-size:13px;color:var(--ink3);transition:transform .25s;line-height:1;}
 .acc-arrow.open{transform:rotate(180deg);}
-.acc-body{max-height:0;overflow:hidden;transition:max-height .35s ease;}
-.acc-body.open{max-height:none;}
+.acc-body{display:none;}
+.acc-body.open{display:block;}
 .acc-text{font-size:13px;color:var(--ink2);line-height:1.85;padding:0 13px 13px 25px;}
 
 /* 十神表 */
@@ -732,12 +732,13 @@ async function renderResult(baseRaw,extract){
   ];
   basicAcc.innerHTML=sections.map(function(s){
     var txt=extract(baseRaw,s.key);
-    return'<div class="acc-item"><div class="acc-head" onclick="accToggle(\'b'+s.id+'\',\'a'+s.id+'\')">'
+    return '<div class="acc-item">'
+      +'<div class="acc-head" data-body="b'+s.id+'" data-arrow="a'+s.id+'" onclick="accToggle(this.dataset.body,this.dataset.arrow)">'
       +'<div class="acc-dot" style="background:'+s.dot+';"></div>'
       +'<span class="acc-title" style="color:'+s.dot+';">'+s.title+'</span>'
       +'<span class="acc-badge '+s.badge+'">'+s.badgeTxt+'</span>'
       +'<span class="acc-arrow" id="a'+s.id+'">▾</span></div>'
-      +'<div class="acc-body" id="b'+s.id+'"><p class="acc-text">'+txt+'</p></div></div>';
+      +'<div class="acc-body" id="b'+s.id+'" ><p class="acc-text">'+txt+'</p></div></div>';
   }).join('');
 
   if(modState.shishen){
@@ -863,29 +864,15 @@ function buildPenta(elCount){
 }
 
 function accToggle(bodyId,arrowId){
-  var b=document.getElementById(bodyId),a=document.getElementById(arrowId);
+  var b=document.getElementById(bodyId);
+  var a=document.getElementById(arrowId);
+  if(!b)return;
   if(b.classList.contains('open')){
-    b.style.maxHeight=b.scrollHeight+'px';
-    requestAnimationFrame(function(){
-      b.style.transition='max-height .3s ease';
-      b.style.maxHeight='0';
-    });
     b.classList.remove('open');
-    a.classList.remove('open');
-    setTimeout(function(){b.style.maxHeight='';b.style.transition='';},320);
+    if(a) a.style.transform='';
   } else {
     b.classList.add('open');
-    a.classList.add('open');
-    b.style.maxHeight='none';
-    var h=b.scrollHeight;
-    b.style.maxHeight='0';
-    b.style.transition='max-height .35s ease';
-    requestAnimationFrame(function(){
-      requestAnimationFrame(function(){
-        b.style.maxHeight=h+'px';
-        setTimeout(function(){b.style.maxHeight='none';b.style.transition='';},380);
-      });
-    });
+    if(a) a.style.transform='rotate(180deg)';
   }
 }
 
