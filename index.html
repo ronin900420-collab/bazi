@@ -176,8 +176,49 @@ body{font-family:'Georgia','Times New Roman',serif;background:var(--paper);color
 
 <div class="container">
 
+<!-- STEP 0: 密碼 -->
+<div id="pwd-section" class="card-box" style="max-width:380px;margin:0 auto;">
+  <p class="card-title" id="pwd-title" style="text-align:center;letter-spacing:.2em;">請輸入使用密碼</p>
+  <div style="display:flex;gap:12px;justify-content:center;margin:1.5rem 0 .5rem;">
+    <input type="password" id="pwd1" maxlength="1" style="width:52px;height:56px;text-align:center;font-size:22px;font-weight:500;border:1.5px solid var(--paper3);border-radius:var(--r);background:var(--paper);color:var(--ink);font-family:inherit;outline:none;" oninput="pwdNext(this,'pwd2')" onkeydown="pwdKey(event,this,null,'pwd2')">
+    <input type="password" id="pwd2" maxlength="1" style="width:52px;height:56px;text-align:center;font-size:22px;font-weight:500;border:1.5px solid var(--paper3);border-radius:var(--r);background:var(--paper);color:var(--ink);font-family:inherit;outline:none;" oninput="pwdNext(this,'pwd3')" onkeydown="pwdKey(event,this,'pwd1','pwd3')">
+    <input type="password" id="pwd3" maxlength="1" style="width:52px;height:56px;text-align:center;font-size:22px;font-weight:500;border:1.5px solid var(--paper3);border-radius:var(--r);background:var(--paper);color:var(--ink);font-family:inherit;outline:none;" oninput="pwdNext(this,'pwd4')" onkeydown="pwdKey(event,this,'pwd2','pwd4')">
+    <input type="password" id="pwd4" maxlength="1" style="width:52px;height:56px;text-align:center;font-size:22px;font-weight:500;border:1.5px solid var(--paper3);border-radius:var(--r);background:var(--paper);color:var(--ink);font-family:inherit;outline:none;" oninput="pwdSubmit()" onkeydown="pwdKey(event,this,'pwd3',null)">
+  </div>
+  <p id="pwd-error" style="text-align:center;font-size:12px;color:#b83232;margin-top:.25rem;min-height:18px;letter-spacing:.06em;"></p>
+  <p style="text-align:center;font-size:11px;color:var(--ink3);margin-top:.75rem;letter-spacing:.06em;">此服務為限定使用，請洽詢命理師取得密碼</p>
+  <div style="margin-top:1.25rem;padding-top:1rem;border-top:.5px solid var(--paper3);">
+    <p style="font-size:11px;color:var(--ink3);text-align:center;margin-bottom:.6rem;letter-spacing:.06em;" id="admin-hint">長按下方按鈕 3 秒進入管理設定</p>
+    <button id="admin-btn" style="width:100%;padding:8px;background:transparent;border:.5px solid var(--paper3);border-radius:var(--r);font-family:inherit;font-size:11px;color:var(--ink3);cursor:pointer;letter-spacing:.06em;" onmousedown="adminHold()" onmouseup="adminRelease()" ontouchstart="adminHold()" ontouchend="adminRelease()">管理員設定</button>
+  </div>
+</div>
+
+<!-- STEP 0b: 管理員設定密碼 -->
+<div id="admin-section-pwd" class="card-box" style="max-width:380px;margin:0 auto;display:none;">
+  <p class="card-title" style="text-align:center;letter-spacing:.2em;">管理員設定</p>
+  <div style="margin-bottom:1rem;">
+    <label style="font-size:11px;color:var(--ink3);display:block;margin-bottom:5px;letter-spacing:.06em;">目前密碼（留空表示尚未設定）</label>
+    <input type="text" id="cur-pwd-display" readonly style="width:100%;padding:8px 10px;border:.5px solid var(--paper3);border-radius:var(--r);background:var(--paper2);color:var(--ink2);font-family:monospace;font-size:16px;letter-spacing:.3em;">
+  </div>
+  <div style="margin-bottom:1rem;">
+    <label style="font-size:11px;color:var(--ink3);display:block;margin-bottom:5px;letter-spacing:.06em;">設定新的 4 位數密碼</label>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <input type="text" inputmode="numeric" id="new-pwd1" maxlength="1" style="width:52px;height:52px;text-align:center;font-size:22px;font-weight:500;border:1.5px solid var(--paper3);border-radius:var(--r);background:var(--paper);color:var(--ink);font-family:inherit;outline:none;" oninput="newPwdNext(this,'new-pwd2')" onkeydown="newPwdKey(event,this,null,'new-pwd2')">
+      <input type="text" inputmode="numeric" id="new-pwd2" maxlength="1" style="width:52px;height:52px;text-align:center;font-size:22px;font-weight:500;border:1.5px solid var(--paper3);border-radius:var(--r);background:var(--paper);color:var(--ink);font-family:inherit;outline:none;" oninput="newPwdNext(this,'new-pwd3')" onkeydown="newPwdKey(event,this,'new-pwd1','new-pwd3')">
+      <input type="text" inputmode="numeric" id="new-pwd3" maxlength="1" style="width:52px;height:52px;text-align:center;font-size:22px;font-weight:500;border:1.5px solid var(--paper3);border-radius:var(--r);background:var(--paper);color:var(--ink);font-family:inherit;outline:none;" oninput="newPwdNext(this,'new-pwd4')" onkeydown="newPwdKey(event,this,'new-pwd2','new-pwd4')">
+      <input type="text" inputmode="numeric" id="new-pwd4" maxlength="1" style="width:52px;height:52px;text-align:center;font-size:22px;font-weight:500;border:1.5px solid var(--paper3);border-radius:var(--r);background:var(--paper);color:var(--ink);font-family:inherit;outline:none;" onkeydown="newPwdKey(event,this,'new-pwd3',null)">
+    </div>
+  </div>
+  <p id="admin-msg" style="text-align:center;font-size:12px;color:#3B6D11;min-height:18px;margin-bottom:.75rem;"></p>
+  <div style="display:flex;gap:.75rem;">
+    <button onclick="savePwd()" style="flex:1;padding:10px;background:var(--ink);color:var(--gold);border:none;border-radius:var(--r);font-family:inherit;font-size:13px;letter-spacing:.1em;cursor:pointer;">儲存密碼</button>
+    <button onclick="backToPwd()" style="padding:10px 16px;background:transparent;border:.5px solid var(--paper3);border-radius:var(--r);font-family:inherit;font-size:12px;color:var(--ink3);cursor:pointer;">返回</button>
+  </div>
+  <button onclick="clearPwd()" style="width:100%;margin-top:.6rem;padding:8px;background:transparent;border:.5px solid #e8c0c0;border-radius:var(--r);font-family:inherit;font-size:11px;color:#b83232;cursor:pointer;letter-spacing:.06em;">清除密碼（停用保護）</button>
+</div>
+
 <!-- STEP 1: 輸入 -->
-<div id="form-section" class="card-box">
+<div id="form-section" class="card-box" style="display:none;">
   <p class="card-title">輸入生辰資料</p>
   <div class="field-grid">
     <div class="field field-full">
@@ -985,10 +1026,95 @@ function loadReportById(id){
     });
 }
 
+var SESSION_KEY='bazi_authed';
+var PWD_KEY='bazi_pwd';
+var adminTimer=null;
+
+function getPwd(){return '0420';}
+
+function pwdNext(el,nextId){
+  if(el.value.length===1){var n=document.getElementById(nextId);if(n)n.focus();}
+}
+function pwdKey(e,el,prevId,nextId){
+  if(e.key==='Backspace'&&el.value===''&&prevId)document.getElementById(prevId).focus();
+  if(e.key==='Enter')pwdSubmit();
+  if(e.key==='ArrowLeft'&&prevId)document.getElementById(prevId).focus();
+  if(e.key==='ArrowRight'&&nextId)document.getElementById(nextId).focus();
+}
+function pwdSubmit(){
+  var code=['pwd1','pwd2','pwd3','pwd4'].map(function(id){return document.getElementById(id).value;}).join('');
+  if(code.length<4)return;
+  var stored=getPwd();
+  var errEl=document.getElementById('pwd-error');
+  if(code===stored){
+    sessionStorage.setItem(SESSION_KEY,'1');
+    document.getElementById('pwd-section').style.display='none';
+    document.getElementById('form-section').style.display='block';
+    errEl.textContent='';
+  } else {
+    errEl.textContent='密碼錯誤，請重試';
+    ['pwd1','pwd2','pwd3','pwd4'].forEach(function(id){document.getElementById(id).value='';});
+    document.getElementById('pwd1').focus();
+  }
+}
+
+function adminHold(){
+  adminTimer=setTimeout(function(){
+    document.getElementById('pwd-section').style.display='none';
+    document.getElementById('admin-section-pwd').style.display='block';
+    var cur=getPwd();
+    document.getElementById('cur-pwd-display').value=cur?cur.split('').join(' · '):'（未設定）';
+    document.getElementById('admin-msg').textContent='';
+    ['new-pwd1','new-pwd2','new-pwd3','new-pwd4'].forEach(function(id){document.getElementById(id).value='';});
+    document.getElementById('new-pwd1').focus();
+  },3000);
+}
+function adminRelease(){if(adminTimer){clearTimeout(adminTimer);adminTimer=null;}}
+
+function newPwdNext(el,nextId){
+  if(el.value.length===1){var n=document.getElementById(nextId);if(n)n.focus();}
+}
+function newPwdKey(e,el,prevId,nextId){
+  if(e.key==='Backspace'&&el.value===''&&prevId)document.getElementById(prevId).focus();
+  if(e.key==='Enter')savePwd();
+  if(e.key==='ArrowLeft'&&prevId)document.getElementById(prevId).focus();
+  if(e.key==='ArrowRight'&&nextId)document.getElementById(nextId).focus();
+}
+
+function savePwd(){
+  var code=['new-pwd1','new-pwd2','new-pwd3','new-pwd4'].map(function(id){return document.getElementById(id).value;}).join('');
+  if(code.length<4){document.getElementById('admin-msg').style.color='#b83232';document.getElementById('admin-msg').textContent='請輸入完整 4 位數字';return;}
+  if(!/^[0-9]{4}$/.test(code)){document.getElementById('admin-msg').style.color='#b83232';document.getElementById('admin-msg').textContent='只能輸入數字 0-9';return;}
+  localStorage.setItem(PWD_KEY,code);
+  document.getElementById('cur-pwd-display').value=code.split('').join(' · ');
+  document.getElementById('admin-msg').style.color='#3B6D11';
+  document.getElementById('admin-msg').textContent='密碼已儲存：'+code.split('').join(' · ');
+}
+function clearPwd(){
+  if(!confirm('確定要清除密碼嗎？清除後任何人都可以使用此服務。'))return;
+  localStorage.removeItem(PWD_KEY);
+  document.getElementById('cur-pwd-display').value='（未設定）';
+  document.getElementById('admin-msg').style.color='#b83232';
+  document.getElementById('admin-msg').textContent='密碼已清除';
+}
+function backToPwd(){
+  document.getElementById('admin-section-pwd').style.display='none';
+  document.getElementById('pwd-section').style.display='block';
+  ['pwd1','pwd2','pwd3','pwd4'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('pwd-error').textContent='';
+  document.getElementById('pwd1').focus();
+}
+
 window.addEventListener('load',function(){
   var path=window.location.pathname;
   var match=path.match(/^\/r\/([A-Za-z0-9]{4,10})$/);
   if(match){loadReportById(match[1]);return;}
+  if(sessionStorage.getItem(SESSION_KEY)==='1'){
+    document.getElementById('pwd-section').style.display='none';
+    document.getElementById('form-section').style.display='block';
+  } else {
+    document.getElementById('pwd1').focus();
+  }
 });
 
 function showExpired(days){
