@@ -730,16 +730,21 @@ async function renderResult(baseRaw,extract){
     {key:'感情姻緣',dot:'#72243E',title:'感情姻緣',badge:'el-fire',badgeTxt:'桃花入命',id:'lo'},
     {key:'運勢建議',dot:'#27500A',title:'運勢建議',badge:'el-wood',badgeTxt:'補木補土',id:'ad'},
   ];
-  basicAcc.innerHTML=sections.map(function(s){
+  var basicHtml='';
+  sections.forEach(function(s){
     var txt=extract(baseRaw,s.key);
-    return '<div class="acc-item">'
-      +'<div class="acc-head" data-body="b'+s.id+'" data-arrow="a'+s.id+'" onclick="accToggle(this.dataset.body,this.dataset.arrow)">'
-      +'<div class="acc-dot" style="background:'+s.dot+';"></div>'
-      +'<span class="acc-title" style="color:'+s.dot+';">'+s.title+'</span>'
-      +'<span class="acc-badge '+s.badge+'">'+s.badgeTxt+'</span>'
-      +'<span class="acc-arrow" id="a'+s.id+'">▾</span></div>'
-      +'<div class="acc-body" id="b'+s.id+'" ><p class="acc-text">'+txt+'</p></div></div>';
-  }).join('');
+    basicHtml+='<div class="acc-item">';
+    basicHtml+='<div class="acc-head" onclick="toggleBasic('b'+s.id+'','a'+s.id+'')">';
+    basicHtml+='<div class="acc-dot" style="background:'+s.dot+';"></div>';
+    basicHtml+='<span class="acc-title" style="color:'+s.dot+';">'+s.title+'</span>';
+    basicHtml+='<span class="acc-badge '+s.badge+'">'+s.badgeTxt+'</span>';
+    basicHtml+='<span id="a'+s.id+'" style="font-size:13px;color:#9c8a6e;line-height:1;">▾</span>';
+    basicHtml+='</div>';
+    basicHtml+='<div id="b'+s.id+'" style="display:none;">';
+    basicHtml+='<p class="acc-text">'+txt+'</p>';
+    basicHtml+='</div></div>';
+  });
+  basicAcc.innerHTML=basicHtml;
 
   if(modState.shishen){
     document.getElementById('sec-shishen').style.display='block';
@@ -873,6 +878,19 @@ function accToggle(bodyId,arrowId){
   } else {
     b.classList.add('open');
     if(a) a.style.transform='rotate(180deg)';
+  }
+}
+
+function toggleBasic(bodyId,arrowId){
+  var b=document.getElementById(bodyId);
+  var a=document.getElementById(arrowId);
+  if(!b)return;
+  if(b.style.display==='block'){
+    b.style.display='none';
+    if(a)a.style.transform='';
+  } else {
+    b.style.display='block';
+    if(a)a.style.transform='rotate(180deg)';
   }
 }
 
