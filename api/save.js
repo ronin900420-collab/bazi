@@ -5,9 +5,9 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const url = process.env.KV_REST_API_URL;
+  const kvUrl = process.env.KV_REST_API_URL;
   const token = process.env.KV_REST_API_TOKEN;
-  if (!url || !token) return res.status(500).json({ error: 'KV not configured' });
+  if (!kvUrl || !token) return res.status(500).json({ error: 'KV not configured' });
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
@@ -19,24 +19,24 @@ export default async function handler(req, res) {
 
     const ttl = expireDays > 0 ? expireDays * 86400 : 60 * 86400;
     const value = JSON.stringify(payload);
+    const key = 'report:' + id;
 
-    const kvRes = await fetch(`${url}/set/report:${id}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ value, ex: ttl }),
+    // Upstash REST API 正確格式：SET key value EX ttl
+    const kvRes = await fetch(`${kvUrl}/set/${encodeURIComponent(key)}/${encodeURIComponent(value)}/ex/${ttl}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
     });
 
-    if (!kvRes.ok) {
-      const err = await kvRes.text();
-      throw new Error('KV set failed: ' + err);
+    const kvData = await kvRes.json();
+    console.log('KV set response:', JSON.stringify(kvData));
+
+    if (!kvRes.ok || kvData.error) {
+      throw new Error('KV set failed: ' + (kvData.error || kvRes.status));
     }
 
     return res.status(200).json({ id });
   } catch (error) {
-    console.error('save error:', error);
+    console.error('save error:', error.message);
     return res.status(500).json({ error: error.message });
   }
 }
