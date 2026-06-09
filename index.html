@@ -676,7 +676,15 @@ async function startGenerate(){
 請輸出五段，每段前加標題：【命格綜覽】【性格特質】【事業財運】【感情姻緣】【運勢建議】，各段80-120字。`;
     var baseRaw=await callAI(basePrompt);
 
-    function extract(text,key){var m=text.match(new RegExp('【'+key+'】\\s*([\\s\\S]*?)(?=【|$)'));return m?m[1].trim():'';}
+    function extract(text,key){
+    if(!text)return '';
+    var marker='【'+key+'】';
+    var idx=text.indexOf(marker);
+    if(idx===-1)return '';
+    var rest=text.slice(idx+marker.length);
+    var end=rest.search(/【/);
+    return end===-1?rest.trim():rest.slice(0,end).trim();
+  }
 
     var tasks=[];
     if(modState.shishen) tasks.push(callAI(`針對以下八字命盤，以日主${dm}（${dmEl}）為基準，詳細解析十神關係的整體意涵，說明比劫、食傷、財星、官殺、印星各自在此盤中的力量與影響，200字以內，繁體中文純文字：${baziStr}`).then(function(t){DATA.shishenText=t;}));
@@ -730,11 +738,9 @@ async function renderResult(baseRaw,extract){
     {key:'感情姻緣',dot:'#72243E',title:'感情姻緣',badge:'el-fire',badgeTxt:'桃花入命',id:'lo'},
     {key:'運勢建議',dot:'#27500A',title:'運勢建議',badge:'el-wood',badgeTxt:'補木補土',id:'ad'},
   ];
-  console.log('baseRaw preview:', baseRaw ? baseRaw.substring(0,100) : 'EMPTY');
   var basicHtml='';
   sections.forEach(function(s){
     var txt=extract(baseRaw,s.key);
-    console.log('key:', s.key, 'txt:', txt ? txt.substring(0,30) : 'EMPTY');
     var bid='b'+s.id;
     var aid='a'+s.id;
     basicHtml+='<div class="acc-item">';
@@ -957,7 +963,15 @@ function loadReportById(id){
         dayunText:d.r.dayun,liunianText:d.r.liunian,loveText:d.r.love,careerText:d.r.career
       };
       document.getElementById('loading-section').style.display='none';
-      function ex(text,key){var m=text.match(new RegExp('【'+key+'】\s*([\s\S]*?)(?=【|$)'));return m?m[1].trim():'';}
+      function ex(text,key){
+        if(!text)return '';
+        var marker='【'+key+'】';
+        var i=text.indexOf(marker);
+        if(i===-1)return '';
+        var rest=text.slice(i+marker.length);
+        var e=rest.indexOf('【');
+        return e===-1?rest.trim():rest.slice(0,e).trim();
+      }
       renderResult(d.r.base,ex);
       var linkEl=document.getElementById('share-url');
       if(linkEl)linkEl.textContent=window.location.href;
