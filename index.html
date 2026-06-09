@@ -108,7 +108,7 @@ body{font-family:'Georgia','Times New Roman',serif;background:var(--paper);color
 .acc-arrow{font-size:13px;color:var(--ink3);transition:transform .25s;line-height:1;}
 .acc-arrow.open{transform:rotate(180deg);}
 .acc-body{max-height:0;overflow:hidden;transition:max-height .35s ease;}
-.acc-body.open{max-height:600px;}
+.acc-body.open{max-height:none;}
 .acc-text{font-size:13px;color:var(--ink2);line-height:1.85;padding:0 13px 13px 25px;}
 
 /* 十神表 */
@@ -864,7 +864,29 @@ function buildPenta(elCount){
 
 function accToggle(bodyId,arrowId){
   var b=document.getElementById(bodyId),a=document.getElementById(arrowId);
-  b.classList.toggle('open');a.classList.toggle('open');
+  if(b.classList.contains('open')){
+    b.style.maxHeight=b.scrollHeight+'px';
+    requestAnimationFrame(function(){
+      b.style.transition='max-height .3s ease';
+      b.style.maxHeight='0';
+    });
+    b.classList.remove('open');
+    a.classList.remove('open');
+    setTimeout(function(){b.style.maxHeight='';b.style.transition='';},320);
+  } else {
+    b.classList.add('open');
+    a.classList.add('open');
+    b.style.maxHeight='none';
+    var h=b.scrollHeight;
+    b.style.maxHeight='0';
+    b.style.transition='max-height .35s ease';
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        b.style.maxHeight=h+'px';
+        setTimeout(function(){b.style.maxHeight='none';b.style.transition='';},380);
+      });
+    });
+  }
 }
 
 function copyLink(){
