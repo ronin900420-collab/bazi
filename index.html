@@ -166,7 +166,6 @@ body{font-family:'Georgia','Times New Roman',serif;background:var(--paper);color
   .liunian-grid{grid-template-columns:1fr 1fr;}
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 </head>
 <body>
 
@@ -809,12 +808,23 @@ function renderResult(baseRaw,extract){
     dayun:D.dayunText||'',liunian:D.liunianText||'',love:D.loveText||'',career:D.careerText||''
   };
   var payload={n:D.n,y:D.y,mo:D.mo,d:D.d,hi:D.hi,g:D.g,mods:modState,expireAt:expireAt,expireDays:expireDays,r:results};
-  var jsonStr=JSON.stringify(payload);
-  var compressed=LZString.compressToEncodedURIComponent(jsonStr);
-  var url=window.location.origin+window.location.pathname+'#'+compressed;
-  document.getElementById('share-url').textContent=url;
-  document.getElementById('expire-hint').textContent=expireDays>0?'此連結將於 '+expireDays+' 天後失效':'此連結永久有效';
-  window.history.replaceState(null,'','#'+compressed);
+  try{
+    var saveRes=await fetch('/api/save',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({payload:payload,expireDays:expireDays})
+    });
+    var saveData=await saveRes.json();
+    if(saveData.id){
+      var url=window.location.origin+'/r/'+saveData.id;
+      document.getElementById('share-url').textContent=url;
+      document.getElementById('expire-hint').textContent=expireDays>0?'此連結 '+expireDays+' 天後失效':'此連結永久有效';
+      window.history.replaceState(null,'','/r/'+saveData.id);
+    }
+  }catch(saveErr){
+    console.error('save error',saveErr);
+    document.getElementById('share-url').textContent='（連結產生失敗，請重試）';
+  }
 }
 
 function buildPenta(elCount){
@@ -872,15 +882,20 @@ function resetAll(){
   window.history.replaceState(null,'',window.location.pathname);
 }
 
-window.addEventListener('load',function(){
-  var hash=window.location.hash.slice(1);
-  if(!hash)return;
-  try{
-    var jsonStr=LZString.decompressFromEncodedURIComponent(hash);
-    var d=jsonStr?JSON.parse(jsonStr):JSON.parse(decodeURIComponent(atob(hash)));
-    if(d.expireAt&&d.expireAt>0&&Date.now()>d.expireAt){showExpired(d.expireDays);return;}
-    if(d.mods){Object.keys(d.mods).forEach(function(k){if(d.mods[k]){modState[k]=true;var card=document.getElementById('mod-'+k);if(card)card.classList.add('checked');}});}
-    if(d.r){
+function loadReportById(id){
+  document.getElementById('form-section').style.display='none';
+  document.getElementById('loading-section').style.display='block';
+  document.getElementById('loading-text').textContent='載入命盤報告……';
+  fetch('/api/report?id='+id)
+    .then(function(res){return res.json();})
+    .then(function(d){
+      if(d.error==='not_found'){
+        document.getElementById('loading-section').style.display='none';
+        document.querySelector('.container').innerHTML='<div style="text-align:center;padding:4rem 1.5rem;max-width:420px;margin:0 auto;"><div style="font-size:36px;margin-bottom:1rem;">🔍</div><h2 style="font-size:20px;font-weight:500;color:var(--ink);margin-bottom:.75rem;letter-spacing:.1em;">找不到報告</h2><p style="font-size:14px;color:var(--ink3);line-height:1.7;">此連結的命盤報告不存在或已被刪除。</p></div>';
+        return;
+      }
+      if(d.error==='expired'){showExpired(d.expireDays);return;}
+      if(d.mods){Object.keys(d.mods).forEach(function(k){if(d.mods[k]){modState[k]=true;var card=document.getElementById('mod-'+k);if(card)card.classList.add('checked');}});}
       var yp=getYearPillar(d.y),mp=getMonthPillar(d.y,d.mo),dp=getDayPillar(d.y,d.mo,d.d),hp=getHourPillar(dp.tg,d.hi);
       DATA={n:d.n,y:d.y,mo:d.mo,d:d.d,hi:d.hi,g:d.g,yp:yp,mp:mp,dp:dp,hp:hp,
         pillars:[yp,mp,dp,hp],elCount:countEl([yp,mp,dp,hp]),dm:dp.tg,dmEl:TG_EL[dp.tg],
@@ -890,24 +905,25 @@ window.addEventListener('load',function(){
         shishenText:d.r.shishen,gejvText:d.r.gejv,shenshaText:d.r.shensha,
         dayunText:d.r.dayun,liunianText:d.r.liunian,loveText:d.r.love,careerText:d.r.career
       };
-      document.getElementById('form-section').style.display='none';
       document.getElementById('loading-section').style.display='none';
-      function ex(text,key){var m=text.match(new RegExp('【'+key+'】\\s*([\\s\\S]*?)(?=【|$)'));return m?m[1].trim():'';}
+      function ex(text,key){var m=text.match(new RegExp('【'+key+'】\s*([\s\S]*?)(?=【|$)'));return m?m[1].trim():'';}
       renderResult(d.r.base,ex);
       var linkEl=document.getElementById('share-url');
       if(linkEl)linkEl.textContent=window.location.href;
       var hintEl=document.getElementById('expire-hint');
-      if(hintEl)hintEl.textContent=d.expireDays>0?'此連結將於 '+d.expireDays+' 天後失效':'此連結永久有效';
-      return;
-    }
-    document.getElementById('inp-name').value=d.n||'';
-    document.getElementById('inp-year').value=d.y||'';
-    document.getElementById('inp-month').value=d.mo||'';
-    document.getElementById('inp-day').value=d.d||'';
-    document.getElementById('inp-hour').value=d.hi!==undefined?d.hi:'';
-    document.getElementById('inp-gender').value=d.g||'';
-    if(d.n&&d.y&&d.mo&&d.d&&d.g) startGenerate();
-  }catch(e){console.error('load error',e);}
+      if(hintEl)hintEl.textContent=d.expireDays>0?'此連結 '+d.expireDays+' 天後失效':'此連結永久有效';
+    })
+    .catch(function(e){
+      document.getElementById('loading-section').style.display='none';
+      document.getElementById('form-section').style.display='block';
+      alert('載入失敗，請重試');
+    });
+}
+
+window.addEventListener('load',function(){
+  var path=window.location.pathname;
+  var match=path.match(/^\/r\/([A-Za-z0-9]{4,10})$/);
+  if(match){loadReportById(match[1]);return;}
 });
 
 function showExpired(days){
