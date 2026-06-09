@@ -166,6 +166,7 @@ body{font-family:'Georgia','Times New Roman',serif;background:var(--paper);color
   .liunian-grid{grid-template-columns:1fr 1fr;}
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 </head>
 <body>
 
@@ -802,12 +803,18 @@ function renderResult(baseRaw,extract){
 
   var expireDays=parseInt(document.querySelector('input[name="expire"]:checked').value);
   var expireAt=expireDays>0?(Date.now()+expireDays*86400000):0;
-  var payload={n:D.n,y:D.y,mo:D.mo,d:D.d,hi:D.hi,g:D.g,mods:modState,expireAt:expireAt,expireDays:expireDays};
-  var encoded=btoa(encodeURIComponent(JSON.stringify(payload)));
-  var url=window.location.origin+window.location.pathname+'#'+encoded;
+  var results={
+    base:baseRaw,
+    shishen:D.shishenText||'',gejv:D.gejvText||'',shensha:D.shenshaText||'',
+    dayun:D.dayunText||'',liunian:D.liunianText||'',love:D.loveText||'',career:D.careerText||''
+  };
+  var payload={n:D.n,y:D.y,mo:D.mo,d:D.d,hi:D.hi,g:D.g,mods:modState,expireAt:expireAt,expireDays:expireDays,r:results};
+  var jsonStr=JSON.stringify(payload);
+  var compressed=LZString.compressToEncodedURIComponent(jsonStr);
+  var url=window.location.origin+window.location.pathname+'#'+compressed;
   document.getElementById('share-url').textContent=url;
   document.getElementById('expire-hint').textContent=expireDays>0?'此連結將於 '+expireDays+' 天後失效':'此連結永久有效';
-  window.history.replaceState(null,'','#'+encoded);
+  window.history.replaceState(null,'','#'+compressed);
 }
 
 function buildPenta(elCount){
@@ -869,9 +876,28 @@ window.addEventListener('load',function(){
   var hash=window.location.hash.slice(1);
   if(!hash)return;
   try{
-    var d=JSON.parse(decodeURIComponent(atob(hash)));
-    if(d.expireAt&&d.expireAt>0&&Date.now()>d.expireAt){
-      showExpired(d.expireDays);
+    var jsonStr=LZString.decompressFromEncodedURIComponent(hash);
+    var d=jsonStr?JSON.parse(jsonStr):JSON.parse(decodeURIComponent(atob(hash)));
+    if(d.expireAt&&d.expireAt>0&&Date.now()>d.expireAt){showExpired(d.expireDays);return;}
+    if(d.mods){Object.keys(d.mods).forEach(function(k){if(d.mods[k]){modState[k]=true;var card=document.getElementById('mod-'+k);if(card)card.classList.add('checked');}});}
+    if(d.r){
+      var yp=getYearPillar(d.y),mp=getMonthPillar(d.y,d.mo),dp=getDayPillar(d.y,d.mo,d.d),hp=getHourPillar(dp.tg,d.hi);
+      DATA={n:d.n,y:d.y,mo:d.mo,d:d.d,hi:d.hi,g:d.g,yp:yp,mp:mp,dp:dp,hp:hp,
+        pillars:[yp,mp,dp,hp],elCount:countEl([yp,mp,dp,hp]),dm:dp.tg,dmEl:TG_EL[dp.tg],
+        baziStr:yp.tg+yp.dz+' '+mp.tg+mp.dz+' '+dp.tg+dp.dz+' '+hp.tg+hp.dz,
+        shishenData:[yp,mp,dp,hp].map(function(p,i){var L=['年柱','月柱','日柱','時柱'];return{label:L[i],tg:p.tg,dz:p.dz,tgSS:i===2?'日主':getShishen(dp.tg,p.tg),dzSS:getShishen(dp.tg,TG[DZ.indexOf(p.dz)%10]||dp.tg)};}),
+        dayunData:getDayun(yp,mp,dp,d.g,d.y),liunianData:getLiunian(2025),
+        shishenText:d.r.shishen,gejvText:d.r.gejv,shenshaText:d.r.shensha,
+        dayunText:d.r.dayun,liunianText:d.r.liunian,loveText:d.r.love,careerText:d.r.career
+      };
+      document.getElementById('form-section').style.display='none';
+      document.getElementById('loading-section').style.display='none';
+      function ex(text,key){var m=text.match(new RegExp('【'+key+'】\\s*([\\s\\S]*?)(?=【|$)'));return m?m[1].trim():'';}
+      renderResult(d.r.base,ex);
+      var linkEl=document.getElementById('share-url');
+      if(linkEl)linkEl.textContent=window.location.href;
+      var hintEl=document.getElementById('expire-hint');
+      if(hintEl)hintEl.textContent=d.expireDays>0?'此連結將於 '+d.expireDays+' 天後失效':'此連結永久有效';
       return;
     }
     document.getElementById('inp-name').value=d.n||'';
@@ -880,9 +906,8 @@ window.addEventListener('load',function(){
     document.getElementById('inp-day').value=d.d||'';
     document.getElementById('inp-hour').value=d.hi!==undefined?d.hi:'';
     document.getElementById('inp-gender').value=d.g||'';
-    if(d.mods){Object.keys(d.mods).forEach(function(k){if(d.mods[k]){modState[k]=true;var card=document.getElementById('mod-'+k);if(card)card.classList.add('checked');}});}
     if(d.n&&d.y&&d.mo&&d.d&&d.g) startGenerate();
-  }catch(e){}
+  }catch(e){console.error('load error',e);}
 });
 
 function showExpired(days){
