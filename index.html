@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>八字命盤 — 專屬命格解析</title>
+<style>
+:root{
+  --ink:#1a1108;--ink2:#5a4a30;--ink3:#9c8a6e;
+  --paper:#faf7f0;--paper2:#f2ede0;--paper3:#e8e0cc;
+  --gold:#c8922a;--gold2:#a67020;
+  --r:10px;--rl:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Georgia','Times New Roman',serif;background:var(--paper);color:var(--ink);min-height:100vh;line-height:1.7;}
+
+/* ── HEADER ── */
+.site-header{background:var(--ink);padding:1.75rem 1.5rem;text-align:center;}
+.site-header h1{font-size:clamp(22px,5vw,34px);font-weight:400;color:var(--gold);letter-spacing:.15em;}
+.site-header p{font-size:12px;color:var(--ink3);margin-top:5px;letter-spacing:.08em;}
+
+.container{max-width:740px;margin:0 auto;padding:2rem 1.25rem;}
+
+/* ── FORM ── */
+.card-box{background:#fff;border:1px solid var(--paper3);border-radius:var(--rl);padding:1.75rem;}
+.card-title{font-size:15px;font-weight:500;color:var(--ink2);margin-bottom:1.25rem;padding-bottom:.6rem;border-bottom:1px solid var(--paper3);letter-spacing:.1em;}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;}
+.field-full{grid-column:1/-1;}
+.field label{display:block;font-size:11px;color:var(--ink3);margin-bottom:4px;letter-spacing:.06em;}
+.field input,.field select{width:100%;padding:9px 11px;border:1px solid var(--paper3);border-radius:var(--r);background:var(--paper);color:var(--ink);font-family:inherit;font-size:14px;outline:none;transition:border-color .15s;}
+.field input:focus,.field select:focus{border-color:var(--gold);}
+.btn-primary{width:100%;margin-top:1.25rem;padding:12px;background:var(--ink);color:var(--gold);border:none;border-radius:var(--r);font-family:inherit;font-size:14px;letter-spacing:.15em;cursor:pointer;transition:background .15s;}
+.btn-primary:hover{background:#2e2010;}
+.btn-primary:disabled{background:var(--ink3);cursor:not-allowed;}
+
+/* ── ADMIN PANEL ── */
+#admin-section{display:none;}
+.admin-intro{font-size:13px;color:var(--ink3);margin-bottom:1.25rem;line-height:1.7;}
+.module-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem;}
+.module-card{border:1px solid var(--paper3);border-radius:var(--r);padding:.85rem 1rem;cursor:pointer;transition:border-color .15s,background .15s;user-select:none;}
+.module-card:hover{border-color:var(--gold);background:#fffcf5;}
+.module-card.checked{border-color:var(--gold);background:#fffcf5;}
+.mc-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.mc-chk{width:16px;height:16px;border:1.5px solid var(--paper3);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,border-color .15s;}
+.module-card.checked .mc-chk{background:var(--gold);border-color:var(--gold);}
+.mc-chk-mark{width:9px;height:6px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px);opacity:0;}
+.module-card.checked .mc-chk-mark{opacity:1;}
+.mc-name{font-size:13px;font-weight:500;color:var(--ink2);}
+.mc-badge{font-size:10px;padding:1px 6px;border-radius:99px;margin-left:auto;}
+.mc-desc{font-size:11px;color:var(--ink3);line-height:1.55;padding-left:24px;}
+.admin-actions{display:flex;gap:.75rem;}
+.btn-gen{flex:1;padding:11px;background:var(--gold);color:#fff;border:none;border-radius:var(--r);font-family:inherit;font-size:14px;letter-spacing:.1em;cursor:pointer;transition:background .15s;}
+.btn-gen:hover{background:var(--gold2);}
+.btn-gen:disabled{background:var(--ink3);cursor:not-allowed;}
+.btn-sec{padding:11px 16px;background:transparent;border:1px solid var(--paper3);border-radius:var(--r);font-family:inherit;font-size:13px;color:var(--ink3);cursor:pointer;}
+.btn-sec:hover{border-color:var(--ink3);color:var(--ink2);}
+
+/* ── LOADING ── */
+#loading-section{display:none;text-align:center;padding:3rem 1rem;}
+.spinner{width:38px;height:38px;border:2px solid var(--paper3);border-top-color:var(--gold);border-radius:50%;margin:0 auto 1.25rem;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#loading-text{font-size:13px;color:var(--ink3);letter-spacing:.06em;}
+
+/* ── RESULT ── */
+#result-section{display:none;}
+.result-hero{background:var(--ink);border-radius:var(--rl);padding:1.75rem 1.5rem;text-align:center;margin-bottom:1.5rem;}
+.rh-eyebrow{font-size:10px;letter-spacing:.2em;color:#7a6a50;margin-bottom:.6rem;}
+.rh-name{font-size:26px;font-weight:500;color:var(--gold);letter-spacing:.15em;margin-bottom:.35rem;}
+.rh-bazi{font-size:17px;letter-spacing:.28em;color:#e8d8b0;margin-bottom:.4rem;}
+.rh-meta{font-size:11px;color:#6a5a40;letter-spacing:.06em;}
+
+.sec-label{font-size:10px;letter-spacing:.15em;color:var(--ink3);margin-bottom:.6rem;}
+
+/* 四柱 */
+.pillar-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:1.4rem;}
+.pillar{background:#fff;border:.5px solid var(--paper3);border-radius:var(--r);padding:9px 5px;text-align:center;}
+.pillar.dm{border:1.5px solid var(--gold);}
+.p-lbl{font-size:10px;color:var(--ink3);letter-spacing:.08em;margin-bottom:7px;}
+.p-lbl.gold{color:var(--gold2);}
+.p-tg{font-size:22px;font-weight:500;line-height:1;margin-bottom:2px;}
+.p-sep{width:1px;height:7px;background:var(--paper3);margin:3px auto;}
+.p-dz{font-size:22px;line-height:1;margin-bottom:4px;}
+.p-el{font-size:10px;padding:1px 6px;border-radius:99px;display:inline-block;}
+.el-wood{color:#27500A;background:#EAF3DE;}
+.el-fire{color:#712B13;background:#FAECE7;}
+.el-earth{color:#633806;background:#FAEEDA;}
+.el-metal{color:#444441;background:#F1EFE8;}
+.el-water{color:#0C447C;background:#E6F1FB;}
+
+/* 五行五角圖 */
+.penta-wrap{display:flex;gap:1.25rem;align-items:center;margin-bottom:1.4rem;}
+.penta-legend{display:flex;flex-direction:column;gap:7px;flex:1;}
+.leg-row{display:flex;align-items:center;gap:7px;}
+.leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.leg-name{font-size:12px;font-weight:500;width:16px;}
+.leg-bar-bg{flex:1;height:5px;background:var(--paper3);border-radius:3px;overflow:hidden;}
+.leg-bar-fill{height:100%;border-radius:3px;}
+.leg-cnt{font-size:11px;width:28px;text-align:right;}
+.leg-tag{font-size:10px;padding:1px 6px;border-radius:99px;margin-left:2px;}
+
+/* 手風琴 */
+.acc-item{border:.5px solid var(--paper3);border-radius:var(--r);margin-bottom:7px;background:#fff;overflow:hidden;}
+.acc-head{display:flex;align-items:center;gap:9px;padding:11px 13px;cursor:pointer;user-select:none;}
+.acc-head:hover{background:#fffcf5;}
+.acc-dot{width:3px;height:15px;border-radius:2px;flex-shrink:0;}
+.acc-title{font-size:13px;font-weight:500;letter-spacing:.06em;flex:1;}
+.acc-badge{font-size:10px;padding:2px 7px;border-radius:99px;}
+.acc-arrow{font-size:13px;color:var(--ink3);transition:transform .25s;line-height:1;}
+.acc-arrow.open{transform:rotate(180deg);}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .35s ease;}
+.acc-body.open{max-height:600px;}
+.acc-text{font-size:13px;color:var(--ink2);line-height:1.85;padding:0 13px 13px 25px;}
+
+/* 十神表 */
+.shishen-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 13px 13px 13px;}
+.ss-card{background:var(--paper);border:.5px solid var(--paper3);border-radius:var(--r);padding:7px;text-align:center;}
+.ss-pillar{font-size:10px;color:var(--ink3);margin-bottom:4px;}
+.ss-tg{font-size:13px;font-weight:500;}
+.ss-name{font-size:10px;padding:2px 5px;border-radius:99px;margin-top:3px;display:inline-block;}
+.ss-dz{font-size:13px;margin-top:6px;}
+.ss-dzname{font-size:10px;padding:2px 5px;border-radius:99px;margin-top:3px;display:inline-block;}
+
+/* 大運 */
+.dayun-row{display:flex;gap:6px;overflow-x:auto;padding:0 13px 13px;scrollbar-width:none;}
+.dayun-row::-webkit-scrollbar{display:none;}
+.dy-card{flex-shrink:0;width:72px;background:var(--paper);border:.5px solid var(--paper3);border-radius:var(--r);padding:8px 6px;text-align:center;}
+.dy-age{font-size:10px;color:var(--ink3);margin-bottom:4px;}
+.dy-tg{font-size:16px;font-weight:500;line-height:1;}
+.dy-dz{font-size:16px;line-height:1;margin-top:2px;}
+.dy-el{font-size:10px;margin-top:4px;padding:1px 5px;border-radius:99px;display:inline-block;}
+
+/* 神煞 */
+.shensha-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 13px 13px;}
+.shensa-item{display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--paper);border:.5px solid var(--paper3);border-radius:var(--r);}
+.shensa-name{font-size:12px;font-weight:500;color:var(--ink2);width:60px;}
+.shensa-desc{font-size:11px;color:var(--ink3);line-height:1.45;flex:1;}
+
+/* 流年 */
+.liunian-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 13px 13px;}
+.ly-card{background:var(--paper);border:.5px solid var(--paper3);border-radius:var(--r);padding:8px;}
+.ly-year{font-size:11px;font-weight:500;color:var(--gold2);margin-bottom:3px;}
+.ly-gz{font-size:13px;font-weight:500;margin-bottom:3px;}
+.ly-desc{font-size:11px;color:var(--ink3);line-height:1.5;}
+
+.divider{border:none;border-top:.5px solid var(--paper3);margin:0 0 1.25rem;}
+
+/* 連結 */
+.link-box{background:var(--paper2);border:.5px solid var(--paper3);border-radius:var(--r);padding:1rem;margin-top:1.25rem;}
+.link-top{font-size:10px;color:var(--ink3);letter-spacing:.1em;margin-bottom:5px;}
+.link-inner{display:flex;gap:6px;}
+.link-url{flex:1;padding:7px 9px;background:#fff;border:.5px solid var(--paper3);border-radius:var(--r);font-family:monospace;font-size:11px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.copy-btn{padding:7px 13px;background:var(--ink);color:var(--gold);border:none;border-radius:var(--r);font-family:inherit;font-size:11px;letter-spacing:.04em;cursor:pointer;white-space:nowrap;}
+.copy-btn:hover{background:#2e2010;}
+.copied{font-size:10px;color:#3B6D11;margin-top:4px;opacity:0;transition:opacity .3s;}
+.copied.show{opacity:1;}
+.btn-reset{width:100%;margin-top:.75rem;padding:10px;background:transparent;border:.5px solid var(--paper3);border-radius:var(--r);font-family:inherit;font-size:12px;color:var(--ink3);cursor:pointer;letter-spacing:.06em;}
+.btn-reset:hover{border-color:var(--ink3);color:var(--ink2);}
+.disclaimer{font-size:11px;color:var(--ink3);text-align:center;margin-top:1.25rem;}
+
+@media(max-width:480px){
+  .field-grid{grid-template-columns:1fr;}
+  .module-grid{grid-template-columns:1fr;}
+  .pillar-row{grid-template-columns:repeat(2,1fr);}
+  .penta-wrap{flex-direction:column;}
+  .shishen-grid{grid-template-columns:repeat(2,1fr);}
+  .liunian-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <h1>八字命盤</h1>
+  <p>天干地支 · 五行命格 · 個人專屬解析</p>
+</header>
+
+<div class="container">
+
+<!-- STEP 1: 輸入 -->
+<div id="form-section" class="card-box">
+  <p class="card-title">輸入生辰資料</p>
+  <div class="field-grid">
+    <div class="field field-full">
+      <label>姓名</label>
+      <input type="text" id="inp-name" placeholder="請輸入姓名">
+    </div>
+    <div class="field">
+      <label>出生年份（西元）</label>
+      <input type="number" id="inp-year" placeholder="例：1990" min="1900" max="2025">
+    </div>
+    <div class="field">
+      <label>出生月份</label>
+      <select id="inp-month">
+        <option value="">請選擇</option>
+        <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+        <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+        <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+        <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>出生日期</label>
+      <input type="number" id="inp-day" placeholder="例：15" min="1" max="31">
+    </div>
+    <div class="field">
+      <label>出生時辰</label>
+      <select id="inp-hour">
+        <option value="">請選擇</option>
+        <option value="0">子時（23–01時）</option><option value="1">丑時（01–03時）</option>
+        <option value="2">寅時（03–05時）</option><option value="3">卯時（05–07時）</option>
+        <option value="4">辰時（07–09時）</option><option value="5">巳時（09–11時）</option>
+        <option value="6">午時（11–13時）</option><option value="7">未時（13–15時）</option>
+        <option value="8">申時（15–17時）</option><option value="9">酉時（17–19時）</option>
+        <option value="10">戌時（19–21時）</option><option value="11">亥時（21–23時）</option>
+        <option value="12">不確定時辰</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>性別</label>
+      <select id="inp-gender">
+        <option value="">請選擇</option>
+        <option value="男">男</option>
+        <option value="女">女</option>
+      </select>
+    </div>
+  </div>
+  <button class="btn-primary" onclick="goToAdmin()">下一步：設定報告內容</button>
+</div>
+
+<!-- STEP 2: 後台勾選 -->
+<div id="admin-section" class="card-box">
+  <p class="card-title">報告模組設定</p>
+  <p class="admin-intro">勾選要納入客戶報告的區塊。基礎區塊固定顯示，延伸區塊可自由開關。</p>
+
+  <p class="sec-label" style="margin-bottom:.5rem;">基礎區塊（固定顯示）</p>
+  <div class="module-grid" style="margin-bottom:1.25rem;">
+    <div class="module-card checked" style="opacity:.6;cursor:default;">
+      <div class="mc-top">
+        <div class="mc-chk"><div class="mc-chk-mark"></div></div>
+        <span class="mc-name">四柱命盤</span>
+        <span class="mc-badge el-water">固定</span>
+      </div>
+      <p class="mc-desc">年月日時四柱天干地支排列</p>
+    </div>
+    <div class="module-card checked" style="opacity:.6;cursor:default;">
+      <div class="mc-top">
+        <div class="mc-chk"><div class="mc-chk-mark"></div></div>
+        <span class="mc-name">五行五角圖</span>
+        <span class="mc-badge el-water">固定</span>
+      </div>
+      <p class="mc-desc">五行旺缺雷達圖 + 強弱統計</p>
+    </div>
+    <div class="module-card checked" style="opacity:.6;cursor:default;">
+      <div class="mc-top">
+        <div class="mc-chk"><div class="mc-chk-mark"></div></div>
+        <span class="mc-name">命格基礎解析</span>
+        <span class="mc-badge el-water">固定</span>
+      </div>
+      <p class="mc-desc">命格、性格、事業、感情、建議五段</p>
+    </div>
+  </div>
+
+  <p class="sec-label" style="margin-bottom:.5rem;">深度解析（可開關）</p>
+  <div class="module-grid">
+    <div class="module-card" id="mod-shishen" onclick="toggleModule('shishen')">
+      <div class="mc-top">
+        <div class="mc-chk" id="chk-shishen"><div class="mc-chk-mark"></div></div>
+        <span class="mc-name">十神關係</span>
+        <span class="mc-badge" style="background:#EEEDFE;color:#3C3489;">最核心</span>
+      </div>
+      <p class="mc-desc">標注八字中每個字的十神，解讀人生各面向深層結構</p>
+    </div>
+    <div class="module-card" id="mod-gejv" onclick="toggleModule('gejv')">
+      <div class="mc-top">
+        <div class="mc-chk" id="chk-gejv"><div class="mc-chk-mark"></div></div>
+        <span class="mc-name">格局判斷</span>
+        <span class="mc-badge" style="background:#FAEEDA;color:#633806;">命盤等級</span>
+      </div>
+      <p class="mc-desc">依月令透干判斷正官格、財格、印格等命盤格局</p>
+    </div>
+    <div class="module-card" id="mod-shensha" onclick="toggleModule('shensha')">
+      <div class="mc-top">
+        <div class="mc-chk" id="chk-shensha"><div class="mc-chk-mark"></div></div>
+        <span class="mc-name">神煞標注</span>
+        <span class="mc-badge" style="background:#FBEAF0;color:#72243E;">客戶最愛</span>
+      </div>
+      <p class="mc-desc">桃花星、驛馬星、天乙貴人、文昌星等特殊標記</p>
+    </div>
+    <div class="module-card" id="mod-dayun" onclick="toggleModule('dayun')">
+      <div class="mc-top">
+        <div class="mc-chk" id="chk-dayun"><div class="mc-chk-mark"></div></div>
+        <span class="mc-name">大運排盤</span>
+        <span class="mc-badge" style="background:#E1F5EE;color:#085041;">高商業價值</span>
+      </div>
+      <p class="mc-desc">推算未來五個大運（每10年），解讀各期整體走向</p>
+    </div>
+    <div class="module-card" id="mod-liunian" onclick="toggleModule('liunian')">
+      <div class="mc-top">
+        <div class="mc-chk" id="chk-liunian"><div class="mc-chk-mark"></div></div>
+        <span class="mc-name">流年運勢</span>
+        <span class="mc-badge" style="background:#FAEEDA;color:#633806;">年度加購</span>
+      </div>
+      <p class="mc-desc">近三年逐年運勢解析，財運感情事業健康分項說明</p>
+    </div>
+    <div class="module-card" id="mod-love" onclick="toggleModule('love')">
+      <div class="mc-top">
+        <div class="mc-chk" id="chk-love"><div class="mc-chk-mark"></div></div>
+        <span class="mc-name">感情專項</span>
+        <span class="mc-badge" style="background:#FBEAF0;color:#72243E;">專項加購</span>
+      </div>
+      <p class="mc-desc">深挖夫妻宮、感情星、桃花結構與適婚時機</p>
+    </div>
+    <div class="module-card" id="mod-career" onclick="toggleModule('career')">
+      <div class="mc-top">
+        <div class="mc-chk" id="chk-career"><div class="mc-chk-mark"></div></div>
+        <span class="mc-name">事業財運專項</span>
+        <span class="mc-badge" style="background:#E1F5EE;color:#085041;">專項加購</span>
+      </div>
+      <p class="mc-desc">財星結構、適合行業、事業高峰期與潛在風險分析</p>
+    </div>
+  </div>
+
+  <div style="margin-top:1.25rem;padding:1rem;background:var(--paper2);border-radius:var(--r);border:1px solid var(--paper3);">
+    <p class="sec-label" style="margin-bottom:.6rem;">連結有效期限</p>
+    <div style="display:flex;gap:1.25rem;align-items:center;flex-wrap:wrap;">
+      <label style="font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="expire" value="3" checked style="accent-color:var(--gold);"> 3 天</label>
+      <label style="font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="expire" value="7" style="accent-color:var(--gold);"> 7 天</label>
+      <label style="font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="expire" value="30" style="accent-color:var(--gold);"> 30 天</label>
+      <label style="font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="expire" value="0" style="accent-color:var(--gold);"> 永久有效</label>
+    </div>
+    <p style="font-size:11px;color:var(--ink3);margin-top:6px;">客戶開啟連結超過有效期後，報告將顯示「連結已過期」提示。</p>
+  </div>
+
+  <div class="admin-actions" style="margin-top:1rem;">
+    <button class="btn-sec" onclick="backToForm()">← 返回</button>
+    <button class="btn-gen" id="btn-gen" onclick="startGenerate()">產生命盤報告</button>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading-section">
+  <div class="spinner"></div>
+  <p id="loading-text">正在排列四柱八字……</p>
+</div>
+
+<!-- RESULT -->
+<div id="result-section">
+  <div class="result-hero">
+    <div class="rh-eyebrow">八字命盤 · 個人專屬解析</div>
+    <div class="rh-name" id="res-name"></div>
+    <div class="rh-bazi" id="res-bazi"></div>
+    <div class="rh-meta" id="res-meta"></div>
+  </div>
+
+  <!-- 四柱 -->
+  <p class="sec-label">四柱命盤</p>
+  <div class="pillar-row" id="pillar-grid"></div>
+  <div class="divider"></div>
+
+  <!-- 五行五角圖 -->
+  <p class="sec-label">五行分佈</p>
+  <div class="penta-wrap">
+    <svg id="penta-svg" width="150" height="155" viewBox="0 0 150 155" style="flex-shrink:0;"></svg>
+    <div class="penta-legend" id="penta-legend"></div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 基礎解析 -->
+  <p class="sec-label">命格解析</p>
+  <div id="basic-acc"></div>
+
+  <!-- 十神 -->
+  <div id="sec-shishen" style="display:none;">
+    <div class="divider"></div>
+    <p class="sec-label">十神關係</p>
+    <div class="acc-item">
+      <div class="acc-head" onclick="accToggle('shishen-body','shishen-arrow')">
+        <div class="acc-dot" style="background:#534AB7;"></div>
+        <span class="acc-title" style="color:#3C3489;">十神關係對照</span>
+        <span class="acc-badge el-water" style="background:#EEEDFE;color:#3C3489;">八字核心</span>
+        <span class="acc-arrow" id="shishen-arrow">▾</span>
+      </div>
+      <div class="acc-body" id="shishen-body">
+        <div class="shishen-grid" id="shishen-grid"></div>
+        <p class="acc-text" id="shishen-text" style="border-top:.5px solid var(--paper3);padding-top:10px;margin-top:4px;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 格局 -->
+  <div id="sec-gejv" style="display:none;">
+    <div class="divider"></div>
+    <p class="sec-label">格局判斷</p>
+    <div class="acc-item">
+      <div class="acc-head" onclick="accToggle('gejv-body','gejv-arrow')">
+        <div class="acc-dot" style="background:#BA7517;"></div>
+        <span class="acc-title" style="color:#633806;">命盤格局</span>
+        <span class="acc-badge" style="background:#FAEEDA;color:#633806;">命盤等級</span>
+        <span class="acc-arrow" id="gejv-arrow">▾</span>
+      </div>
+      <div class="acc-body" id="gejv-body">
+        <p class="acc-text" id="gejv-text"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 神煞 -->
+  <div id="sec-shensha" style="display:none;">
+    <div class="divider"></div>
+    <p class="sec-label">神煞標注</p>
+    <div class="acc-item">
+      <div class="acc-head" onclick="accToggle('shensha-body','shensha-arrow')">
+        <div class="acc-dot" style="background:#D4537E;"></div>
+        <span class="acc-title" style="color:#72243E;">神煞一覽</span>
+        <span class="acc-badge" style="background:#FBEAF0;color:#72243E;">特殊標記</span>
+        <span class="acc-arrow" id="shensha-arrow">▾</span>
+      </div>
+      <div class="acc-body" id="shensha-body">
+        <div class="shensha-grid" id="shensha-grid"></div>
+        <p class="acc-text" id="shensha-text" style="border-top:.5px solid var(--paper3);padding-top:10px;margin-top:4px;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 大運 -->
+  <div id="sec-dayun" style="display:none;">
+    <div class="divider"></div>
+    <p class="sec-label">大運排盤</p>
+    <div class="acc-item">
+      <div class="acc-head" onclick="accToggle('dayun-body','dayun-arrow')">
+        <div class="acc-dot" style="background:#1D9E75;"></div>
+        <span class="acc-title" style="color:#085041;">大運走勢</span>
+        <span class="acc-badge" style="background:#E1F5EE;color:#085041;">每10年</span>
+        <span class="acc-arrow" id="dayun-arrow">▾</span>
+      </div>
+      <div class="acc-body" id="dayun-body">
+        <div class="dayun-row" id="dayun-row"></div>
+        <p class="acc-text" id="dayun-text" style="border-top:.5px solid var(--paper3);padding-top:10px;margin-top:4px;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 流年 -->
+  <div id="sec-liunian" style="display:none;">
+    <div class="divider"></div>
+    <p class="sec-label">流年運勢</p>
+    <div class="acc-item">
+      <div class="acc-head" onclick="accToggle('liunian-body','liunian-arrow')">
+        <div class="acc-dot" style="background:#BA7517;"></div>
+        <span class="acc-title" style="color:#633806;">近三年流年</span>
+        <span class="acc-badge" style="background:#FAEEDA;color:#633806;">逐年解析</span>
+        <span class="acc-arrow" id="liunian-arrow">▾</span>
+      </div>
+      <div class="acc-body" id="liunian-body">
+        <div class="liunian-grid" id="liunian-grid"></div>
+        <p class="acc-text" id="liunian-text" style="border-top:.5px solid var(--paper3);padding-top:10px;margin-top:4px;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 感情專項 -->
+  <div id="sec-love" style="display:none;">
+    <div class="divider"></div>
+    <p class="sec-label">感情專項報告</p>
+    <div class="acc-item">
+      <div class="acc-head" onclick="accToggle('love-body','love-arrow')">
+        <div class="acc-dot" style="background:#D4537E;"></div>
+        <span class="acc-title" style="color:#72243E;">感情姻緣深度解析</span>
+        <span class="acc-badge" style="background:#FBEAF0;color:#72243E;">專項</span>
+        <span class="acc-arrow" id="love-arrow">▾</span>
+      </div>
+      <div class="acc-body" id="love-body">
+        <p class="acc-text" id="love-text"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 事業專項 -->
+  <div id="sec-career" style="display:none;">
+    <div class="divider"></div>
+    <p class="sec-label">事業財運專項報告</p>
+    <div class="acc-item">
+      <div class="acc-head" onclick="accToggle('career-body','career-arrow')">
+        <div class="acc-dot" style="background:#1D9E75;"></div>
+        <span class="acc-title" style="color:#085041;">事業財運深度解析</span>
+        <span class="acc-badge" style="background:#E1F5EE;color:#085041;">專項</span>
+        <span class="acc-arrow" id="career-arrow">▾</span>
+      </div>
+      <div class="acc-body" id="career-body">
+        <p class="acc-text" id="career-text"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 連結 -->
+  <div class="link-box" style="margin-top:1.5rem;">
+    <div class="link-top">專屬命盤連結（分享給客戶）</div>
+    <div class="link-inner">
+      <div class="link-url" id="share-url"></div>
+      <button class="copy-btn" onclick="copyLink()">複製連結</button>
+    </div>
+    <div class="copied" id="copy-confirm">已複製到剪貼簿</div>
+    <p id="expire-hint" style="font-size:11px;color:var(--ink3);margin-top:5px;"></p>
+  </div>
+  <button class="btn-reset" onclick="resetAll()">重新輸入 / 新客戶</button>
+  <p class="disclaimer" style="margin-top:1rem;">本命盤僅供參考，不代表實際命運，請以積極正面態度面對人生。</p>
+</div>
+
+</div><!-- /container -->
+
+<script>
+var TG=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+var DZ=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+var TG_EL={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+var DZ_EL={'子':'水','丑':'土','寅':'木','卯':'木','辰':'土','巳':'火','午':'火','未':'土','申':'金','酉':'金','戌':'土','亥':'水'};
+var EL_CLS={'木':'el-wood','火':'el-fire','土':'el-earth','金':'el-metal','水':'el-water'};
+var EL_COLOR={'木':'#639922','火':'#D85A30','土':'#BA7517','金':'#888780','水':'#185FA5'};
+var EL_BAR={'木':'#97C459','火':'#F0997B','土':'#EF9F27','金':'#B4B2A9','水':'#85B7EB'};
+
+var MODULES=['shishen','gejv','shensha','dayun','liunian','love','career'];
+var modState={shishen:false,gejv:false,shensha:false,dayun:false,liunian:false,love:false,career:false};
+
+var DATA={};
+
+function toggleModule(k){
+  modState[k]=!modState[k];
+  var card=document.getElementById('mod-'+k);
+  if(modState[k]) card.classList.add('checked');
+  else card.classList.remove('checked');
+}
+
+function goToAdmin(){
+  var n=document.getElementById('inp-name').value.trim();
+  var y=parseInt(document.getElementById('inp-year').value);
+  var mo=parseInt(document.getElementById('inp-month').value);
+  var d=parseInt(document.getElementById('inp-day').value);
+  var h=document.getElementById('inp-hour').value;
+  var g=document.getElementById('inp-gender').value;
+  if(!n||!y||!mo||!d||h===''||!g){alert('請填寫所有欄位');return;}
+  document.getElementById('form-section').style.display='none';
+  document.getElementById('admin-section').style.display='block';
+}
+
+function backToForm(){
+  document.getElementById('admin-section').style.display='none';
+  document.getElementById('form-section').style.display='block';
+}
+
+function getYearPillar(y){return{tg:TG[(y-4)%10],dz:DZ[(y-4)%12]};}
+function getMonthPillar(y,mo){
+  var base=((y-4)%10)*12;
+  var mDZ=['寅','卯','辰','巳','午','未','申','酉','戌','亥','子','丑'];
+  return{tg:TG[(base+mo-1)%10],dz:mDZ[mo-1]};
+}
+function getDayPillar(y,mo,d){
+  var a=Math.floor((14-mo)/12),yy=y-a,mm=mo+12*a-2;
+  var jd=d+Math.floor((153*mm+2)/5)+365*yy+Math.floor(yy/4)-Math.floor(yy/100)+Math.floor(yy/400)-32045;
+  return{tg:TG[(jd+40)%10],dz:DZ[(jd+14)%12]};
+}
+function getHourPillar(dTG,hi){
+  if(hi===12)return{tg:'？',dz:'？'};
+  var idx=TG.indexOf(dTG);
+  return{tg:TG[(idx*2+hi)%10],dz:DZ[hi]};
+}
+function countEl(pillars){
+  var c={'木':0,'火':0,'土':0,'金':0,'水':0};
+  pillars.forEach(function(p){if(TG_EL[p.tg])c[TG_EL[p.tg]]++;if(DZ_EL[p.dz])c[DZ_EL[p.dz]]++;});
+  return c;
+}
+
+function getShishen(dayTG,targetTG){
+  var el5=['木','火','土','金','水'];
+  var sheng=[0,1,2,3,4].reduce(function(o,i){o[el5[i]]=el5[(i+1)%5];return o;},{});
+  var ke=[0,1,2,3,4].reduce(function(o,i){o[el5[i]]=el5[(i+2)%5];return o;},{});
+  if(targetTG==='？')return'？';
+  var dEl=TG_EL[dayTG],tEl=TG_EL[targetTG];
+  var dYin=TG.indexOf(dayTG)%2===1,tYin=TG.indexOf(targetTG)%2===1;
+  var same=dEl===tEl;
+  if(same)return dYin===tYin?'比肩':'劫財';
+  if(sheng[dEl]===tEl)return dYin===tYin?'傷官':'食神';
+  if(ke[dEl]===tEl)return dYin===tYin?'偏財':'正財';
+  if(sheng[tEl]===dEl)return dYin===tYin?'偏印':'正印';
+  if(ke[tEl]===dEl)return dYin===tYin?'七殺':'正官';
+  return'—';
+}
+
+function getDayun(yp,mp,dp,gender,birthYear){
+  var isYang=TG.indexOf(mp.tg)%2===0;
+  var forward=(gender==='男'&&isYang)||(gender==='女'&&!isYang);
+  var result=[];
+  for(var i=1;i<=5;i++){
+    var offset=forward?i:-i;
+    var mpIdx=TG.indexOf(mp.tg)+offset;
+    var dzIdx=DZ.indexOf(mp.dz)+offset;
+    while(mpIdx<0)mpIdx+=10; while(dzIdx<0)dzIdx+=12;
+    result.push({tg:TG[mpIdx%10],dz:DZ[dzIdx%12],startAge:i*10-8});
+  }
+  return result;
+}
+
+function getLiunian(currentYear){
+  var res=[];
+  for(var i=0;i<3;i++){
+    var y=currentYear+i;
+    res.push({year:y,tg:TG[(y-4)%10],dz:DZ[(y-4)%12]});
+  }
+  return res;
+}
+
+var SHENSHA_RULES={
+  '桃花星':{desc:'主感情緣分豐厚，人緣極好，異性緣強',badge:'el-fire'},
+  '天乙貴人':{desc:'一生貴人相助，逢凶化吉，官場得力',badge:'el-water'},
+  '文昌星':{desc:'利學業考試、文書才華，聰慧善學',badge:'el-wood'},
+  '驛馬星':{desc:'主奔波遷移，利出外發展、異地求財',badge:'el-metal'},
+  '羊刃':{desc:'性格剛強果決，宜武職或競爭性行業',badge:'el-fire'},
+  '空亡':{desc:'某宮位力量削弱，該領域需格外用心',badge:'el-earth'},
+};
+
+async function callAI(prompt){
+  var res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+  });
+  if(!res.ok){
+    var err=await res.text();
+    throw new Error('API error '+res.status+': '+err);
+  }
+  var d=await res.json();
+  return d.content&&d.content[0]?d.content[0].text:'';
+}
+
+function setLoading(txt){document.getElementById('loading-text').textContent=txt;}
+
+async function startGenerate(){
+  var n=document.getElementById('inp-name').value.trim();
+  var y=parseInt(document.getElementById('inp-year').value);
+  var mo=parseInt(document.getElementById('inp-month').value);
+  var d=parseInt(document.getElementById('inp-day').value);
+  var hi=parseInt(document.getElementById('inp-hour').value);
+  var g=document.getElementById('inp-gender').value;
+  var hourLabel=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥','未知'];
+  var mnLabel=['一','二','三','四','五','六','七','八','九','十','十一','十二'];
+
+  document.getElementById('admin-section').style.display='none';
+  document.getElementById('loading-section').style.display='block';
+
+  try{
+    setLoading('排列四柱八字……');
+    var yp=getYearPillar(y),mp=getMonthPillar(y,mo),dp=getDayPillar(y,mo,d),hp=getHourPillar(dp.tg,hi);
+    var pillars=[yp,mp,dp,hp];
+    var elCount=countEl(pillars);
+    var dm=dp.tg,dmEl=TG_EL[dm];
+    var baziStr=yp.tg+yp.dz+' '+mp.tg+mp.dz+' '+dp.tg+dp.dz+' '+hp.tg+hp.dz;
+    var elStr=Object.entries(elCount).map(function(e){return e[0]+'×'+e[1];}).join('、');
+    var shishenData=pillars.map(function(p,i){
+      var labels=['年柱','月柱','日柱','時柱'];
+      return{label:labels[i],tg:p.tg,dz:p.dz,tgSS:i===2?'日主':getShishen(dm,p.tg),dzSS:getShishen(dm,TG[DZ.indexOf(p.dz)%10]||dm)};
+    });
+    var dayunData=getDayun(yp,mp,dp,g,y);
+    var liunianData=getLiunian(2025);
+
+    DATA={n,y,mo,d,hi,g,yp,mp,dp,hp,pillars,elCount,dm,dmEl,baziStr,elStr,shishenData,dayunData,liunianData};
+
+    setLoading('AI 解讀命格……');
+    var basePrompt=`你是八字命理專家。請用繁體中文為以下命盤給出深入解析，不使用markdown，純文字輸出。
+命主：${n}，${g}，${y}年${mnLabel[mo-1]}月${d}日${hourLabel[Math.min(hi,12)]}時
+四柱：${baziStr}，日主${dm}（${dmEl}），五行：${elStr}
+請輸出五段，每段前加標題：【命格綜覽】【性格特質】【事業財運】【感情姻緣】【運勢建議】，各段80-120字。`;
+    var baseRaw=await callAI(basePrompt);
+
+    function extract(text,key){var m=text.match(new RegExp('【'+key+'】\\s*([\\s\\S]*?)(?=【|$)'));return m?m[1].trim():'';}
+
+    var tasks=[];
+    if(modState.shishen) tasks.push(callAI(`針對以下八字命盤，以日主${dm}（${dmEl}）為基準，詳細解析十神關係的整體意涵，說明比劫、食傷、財星、官殺、印星各自在此盤中的力量與影響，200字以內，繁體中文純文字：${baziStr}`).then(function(t){DATA.shishenText=t;}));
+    if(modState.gejv) tasks.push(callAI(`針對此八字 ${baziStr}，月令為${mp.dz}（${DZ_EL[mp.dz]}），日主${dm}，請判斷命盤格局類型（正官格/財格/印格/食神格/七殺格/特殊格等），說明格局特色與人生走向，150字以內，繁體中文純文字。`).then(function(t){DATA.gejvText=t;}));
+    if(modState.shensha) tasks.push(callAI(`針對此八字 ${baziStr}（${y}年生，${g}），請列出命中最重要的2-4個神煞（如桃花星、天乙貴人、文昌星、驛馬星、羊刃等），說明各神煞所在柱位及實際影響，200字以內，繁體中文純文字。`).then(function(t){DATA.shenshaText=t;}));
+    if(modState.dayun) tasks.push(callAI(`針對此八字 ${baziStr}（日主${dm}，${g}），請解讀以下五個大運的整體運勢走向，每個大運約30字：${dayunData.map(function(d){return d.startAge+'歲'+d.tg+d.dz;}).join('、')}。繁體中文純文字。`).then(function(t){DATA.dayunText=t;}));
+    if(modState.liunian) tasks.push(callAI(`針對此八字 ${baziStr}（日主${dm}），請解讀2025、2026、2027三個流年，每年分別說明財運、感情、事業三方面重點，每年約60字，繁體中文純文字，格式：【2025年】…【2026年】…【2027年】…`).then(function(t){DATA.liunianText=t;}));
+    if(modState.love) tasks.push(callAI(`針對此八字 ${baziStr}（日主${dm}，${dmEl}，${g}），請深度解析感情姻緣：夫妻宮狀況、感情星力量、桃花特質、擇偶方向、適婚流年，約250字，繁體中文純文字。`).then(function(t){DATA.loveText=t;}));
+    if(modState.career) tasks.push(callAI(`針對此八字 ${baziStr}（日主${dm}，${dmEl}，${g}），請深度解析事業財運：財星結構與強弱、適合行業方向、財富積累模式、事業高峰期、潛在風險與建議，約250字，繁體中文純文字。`).then(function(t){DATA.careerText=t;}));
+
+    setLoading('解析延伸模組……');
+    await Promise.all(tasks);
+
+    setLoading('繪製報告……');
+    renderResult(baseRaw,extract);
+  }catch(e){
+    console.error(e);
+    document.getElementById('loading-section').style.display='none';
+    document.getElementById('admin-section').style.display='block';
+    alert('發生錯誤，請稍後再試。');
+  }
+}
+
+function renderResult(baseRaw,extract){
+  var D=DATA;
+  document.getElementById('loading-section').style.display='none';
+  document.getElementById('result-section').style.display='block';
+
+  document.getElementById('res-name').textContent=D.n;
+  document.getElementById('res-bazi').textContent=D.yp.tg+D.yp.dz+'　'+D.mp.tg+D.mp.dz+'　'+D.dp.tg+D.dp.dz+'　'+D.hp.tg+D.hp.dz;
+  var hourLabel=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥','未知'];
+  document.getElementById('res-meta').textContent=D.y+'年'+D.mo+'月'+D.d+'日 '+hourLabel[Math.min(D.hi,12)]+'時 · '+D.g+' · 日主 '+D.dm+'（'+D.dmEl+'）';
+
+  var pg=document.getElementById('pillar-grid');
+  var labels=['年柱','月柱','日柱','時柱'];
+  pg.innerHTML=D.pillars.map(function(p,i){
+    var tgEl=TG_EL[p.tg]||'',dzEl=DZ_EL[p.dz]||'';
+    return'<div class="pillar'+(i===2?' dm':'')+'"><div class="p-lbl'+(i===2?' gold':'')+'">'+labels[i]+'</div>'
+      +'<div class="p-tg '+(EL_CLS[tgEl]||'')+'">'+p.tg+'</div><div class="p-sep"></div>'
+      +'<div class="p-dz '+(EL_CLS[dzEl]||'')+'">'+p.dz+'</div>'
+      +(tgEl?'<div class="p-el '+(EL_CLS[tgEl]||'')+'">'+tgEl+'</div>':'')+'</div>';
+  }).join('');
+
+  buildPenta(D.elCount);
+
+  var basicAcc=document.getElementById('basic-acc');
+  var sections=[
+    {key:'命格綜覽',dot:'#c8922a',title:'命格綜覽',badge:'el-water',badgeTxt:D.dm+'水日主',id:'ov'},
+    {key:'性格特質',dot:'#885040',title:'性格特質',badge:'el-metal',badgeTxt:'個性分析',id:'pe'},
+    {key:'事業財運',dot:'#185FA5',title:'事業財運',badge:'el-fire',badgeTxt:'財星解析',id:'ca'},
+    {key:'感情姻緣',dot:'#72243E',title:'感情姻緣',badge:'el-fire',badgeTxt:'桃花入命',id:'lo'},
+    {key:'運勢建議',dot:'#27500A',title:'運勢建議',badge:'el-wood',badgeTxt:'補木補土',id:'ad'},
+  ];
+  basicAcc.innerHTML=sections.map(function(s){
+    var txt=extract(baseRaw,s.key);
+    return'<div class="acc-item"><div class="acc-head" onclick="accToggle(\'b'+s.id+'\',\'a'+s.id+'\')">'
+      +'<div class="acc-dot" style="background:'+s.dot+';"></div>'
+      +'<span class="acc-title" style="color:'+s.dot+';">'+s.title+'</span>'
+      +'<span class="acc-badge '+s.badge+'">'+s.badgeTxt+'</span>'
+      +'<span class="acc-arrow" id="a'+s.id+'">▾</span></div>'
+      +'<div class="acc-body" id="b'+s.id+'"><p class="acc-text">'+txt+'</p></div></div>';
+  }).join('');
+
+  if(modState.shishen){
+    document.getElementById('sec-shishen').style.display='block';
+    var sg=document.getElementById('shishen-grid');
+    sg.innerHTML=D.shishenData.map(function(p){
+      var tgCls=EL_CLS[TG_EL[p.tg]]||'',dzCls=EL_CLS[DZ_EL[p.dz]]||'';
+      return'<div class="ss-card"><div class="ss-pillar">'+p.label+'</div>'
+        +'<div class="ss-tg '+tgCls+'">'+p.tg+'</div>'
+        +'<div class="ss-name '+tgCls+'">'+p.tgSS+'</div>'
+        +'<div class="ss-dz '+dzCls+'" style="margin-top:6px;">'+p.dz+'</div>'
+        +'<div class="ss-dzname '+dzCls+'">'+p.dzSS+'</div></div>';
+    }).join('');
+    document.getElementById('shishen-text').textContent=D.shishenText||'';
+  }
+
+  if(modState.gejv){
+    document.getElementById('sec-gejv').style.display='block';
+    document.getElementById('gejv-text').textContent=D.gejvText||'';
+  }
+
+  if(modState.shensha){
+    document.getElementById('sec-shensha').style.display='block';
+    var ssNames=Object.keys(SHENSHA_RULES).slice(0,4);
+    document.getElementById('shensha-grid').innerHTML=ssNames.map(function(name){
+      var r=SHENSHA_RULES[name];
+      return'<div class="shensa-item"><span class="shensa-name '+r.badge+'">'+name+'</span><span class="shensa-desc">'+r.desc+'</span></div>';
+    }).join('');
+    document.getElementById('shensha-text').textContent=D.shenshaText||'';
+  }
+
+  if(modState.dayun){
+    document.getElementById('sec-dayun').style.display='block';
+    document.getElementById('dayun-row').innerHTML=D.dayunData.map(function(dy){
+      var tgEl=TG_EL[dy.tg]||'',dzEl=DZ_EL[dy.dz]||'';
+      return'<div class="dy-card"><div class="dy-age">'+dy.startAge+'歲起</div>'
+        +'<div class="dy-tg '+(EL_CLS[tgEl]||'')+'">'+dy.tg+'</div>'
+        +'<div class="dy-dz '+(EL_CLS[dzEl]||'')+'">'+dy.dz+'</div>'
+        +'<div class="dy-el '+(EL_CLS[tgEl]||'')+'">'+tgEl+'</div></div>';
+    }).join('');
+    document.getElementById('dayun-text').textContent=D.dayunText||'';
+  }
+
+  if(modState.liunian){
+    document.getElementById('sec-liunian').style.display='block';
+    document.getElementById('liunian-grid').innerHTML=D.liunianData.map(function(ly){
+      var tgEl=TG_EL[ly.tg]||'';
+      return'<div class="ly-card"><div class="ly-year">'+ly.year+'年</div>'
+        +'<div class="ly-gz '+(EL_CLS[tgEl]||'')+'">'+ly.tg+ly.dz+'</div>'
+        +'<div class="ly-desc">'+tgEl+'年</div></div>';
+    }).join('');
+    var lnRaw=D.liunianText||'';
+    function exLY(text,yr){var m=text.match(new RegExp('【'+yr+'年】\\s*([\\s\\S]*?)(?=【|$)'));return m?m[1].trim():'';}
+    var lnHtml=D.liunianData.map(function(ly){
+      var t=exLY(lnRaw,ly.year);
+      return t?'<strong style="color:var(--gold2);">'+ly.year+'年</strong><br>'+t:'';
+    }).filter(Boolean).join('<br><br>');
+    document.getElementById('liunian-text').innerHTML=lnHtml||lnRaw;
+  }
+
+  if(modState.love){
+    document.getElementById('sec-love').style.display='block';
+    document.getElementById('love-text').textContent=D.loveText||'';
+  }
+  if(modState.career){
+    document.getElementById('sec-career').style.display='block';
+    document.getElementById('career-text').textContent=D.careerText||'';
+  }
+
+  var expireDays=parseInt(document.querySelector('input[name="expire"]:checked').value);
+  var expireAt=expireDays>0?(Date.now()+expireDays*86400000):0;
+  var payload={n:D.n,y:D.y,mo:D.mo,d:D.d,hi:D.hi,g:D.g,mods:modState,expireAt:expireAt,expireDays:expireDays};
+  var encoded=btoa(encodeURIComponent(JSON.stringify(payload)));
+  var url=window.location.origin+window.location.pathname+'#'+encoded;
+  document.getElementById('share-url').textContent=url;
+  document.getElementById('expire-hint').textContent=expireDays>0?'此連結將於 '+expireDays+' 天後失效':'此連結永久有效';
+  window.history.replaceState(null,'','#'+encoded);
+}
+
+function buildPenta(elCount){
+  var CX=75,CY=80,R=55,RI=12,MAX=8;
+  var ORDER=['木','火','土','金','水'];
+  var svg=document.getElementById('penta-svg');
+  svg.innerHTML='';
+  function pt(i,r){var a=(i*72-90)*Math.PI/180;return[CX+r*Math.cos(a),CY+r*Math.sin(a)];}
+  var bgPts=ORDER.map(function(_,i){var p=pt(i,R);return p[0]+','+p[1];}).join(' ');
+  var bgEl=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  bgEl.setAttribute('points',bgPts);bgEl.setAttribute('fill','#f2ede0');bgEl.setAttribute('stroke','#e8e0cc');bgEl.setAttribute('stroke-width','1');svg.appendChild(bgEl);
+  ORDER.forEach(function(_,i){var p=pt(i,R);var l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1',CX);l.setAttribute('y1',CY);l.setAttribute('x2',p[0]);l.setAttribute('y2',p[1]);l.setAttribute('stroke','#ddd8cc');l.setAttribute('stroke-width','0.5');svg.appendChild(l);});
+  var midPts=ORDER.map(function(_,i){var p=pt(i,R*.5);return p[0]+','+p[1];}).join(' ');
+  var midEl=document.createElementNS('http://www.w3.org/2000/svg','polygon');midEl.setAttribute('points',midPts);midEl.setAttribute('fill','none');midEl.setAttribute('stroke','#e0d8c8');midEl.setAttribute('stroke-width','0.5');midEl.setAttribute('stroke-dasharray','2,2');svg.appendChild(midEl);
+  var dataPts=ORDER.map(function(el,i){var f=elCount[el]/MAX;var r=RI+f*(R-RI);var p=pt(i,r);return p[0]+','+p[1];}).join(' ');
+  var fill=document.createElementNS('http://www.w3.org/2000/svg','polygon');fill.setAttribute('points',dataPts);fill.setAttribute('fill','rgba(200,146,42,0.18)');fill.setAttribute('stroke','#c8922a');fill.setAttribute('stroke-width','1.5');svg.appendChild(fill);
+  ORDER.forEach(function(el,i){var f=elCount[el]/MAX;var r=RI+f*(R-RI);var p=pt(i,r);var c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',p[0]);c.setAttribute('cy',p[1]);c.setAttribute('r','4');c.setAttribute('fill',EL_COLOR[el]);c.setAttribute('stroke','#fff');c.setAttribute('stroke-width','1.5');svg.appendChild(c);});
+  ORDER.forEach(function(el,i){var p=pt(i,R+15);var t=document.createElementNS('http://www.w3.org/2000/svg','text');t.setAttribute('x',p[0]);t.setAttribute('y',p[1]+4);t.setAttribute('text-anchor','middle');t.setAttribute('font-size','12');t.setAttribute('font-weight','500');t.setAttribute('fill',EL_COLOR[el]);t.textContent=el;svg.appendChild(t);});
+  var lg=document.getElementById('penta-legend');
+  lg.innerHTML=ORDER.map(function(el){
+    var cnt=elCount[el],tag=cnt>=3?'旺':cnt===0?'缺':'中';
+    var tagCls=EL_CLS[el]||'';
+    return'<div class="leg-row"><div class="leg-dot" style="background:'+EL_COLOR[el]+';"></div>'
+      +'<span class="leg-name" style="color:'+EL_COLOR[el]+';">'+el+'</span>'
+      +'<div class="leg-bar-bg"><div class="leg-bar-fill" style="width:'+Math.round(cnt/MAX*100)+'%;background:'+EL_BAR[el]+';"></div></div>'
+      +'<span class="leg-cnt" style="color:'+EL_COLOR[el]+';">'+cnt+'個</span>'
+      +'<span class="leg-tag '+tagCls+'">'+tag+'</span></div>';
+  }).join('');
+}
+
+function accToggle(bodyId,arrowId){
+  var b=document.getElementById(bodyId),a=document.getElementById(arrowId);
+  b.classList.toggle('open');a.classList.toggle('open');
+}
+
+function copyLink(){
+  var url=document.getElementById('share-url').textContent;
+  navigator.clipboard.writeText(url).then(function(){
+    var el=document.getElementById('copy-confirm');el.classList.add('show');
+    setTimeout(function(){el.classList.remove('show');},2500);
+  });
+}
+
+function resetAll(){
+  document.getElementById('result-section').style.display='none';
+  document.getElementById('form-section').style.display='block';
+  MODULES.forEach(function(k){modState[k]=false;document.getElementById('mod-'+k).classList.remove('checked');});
+  document.getElementById('sec-shishen').style.display='none';
+  document.getElementById('sec-gejv').style.display='none';
+  document.getElementById('sec-shensha').style.display='none';
+  document.getElementById('sec-dayun').style.display='none';
+  document.getElementById('sec-liunian').style.display='none';
+  document.getElementById('sec-love').style.display='none';
+  document.getElementById('sec-career').style.display='none';
+  window.history.replaceState(null,'',window.location.pathname);
+}
+
+window.addEventListener('load',function(){
+  var hash=window.location.hash.slice(1);
+  if(!hash)return;
+  try{
+    var d=JSON.parse(decodeURIComponent(atob(hash)));
+    if(d.expireAt&&d.expireAt>0&&Date.now()>d.expireAt){
+      showExpired(d.expireDays);
+      return;
+    }
+    document.getElementById('inp-name').value=d.n||'';
+    document.getElementById('inp-year').value=d.y||'';
+    document.getElementById('inp-month').value=d.mo||'';
+    document.getElementById('inp-day').value=d.d||'';
+    document.getElementById('inp-hour').value=d.hi!==undefined?d.hi:'';
+    document.getElementById('inp-gender').value=d.g||'';
+    if(d.mods){Object.keys(d.mods).forEach(function(k){if(d.mods[k]){modState[k]=true;var card=document.getElementById('mod-'+k);if(card)card.classList.add('checked');}});}
+    if(d.n&&d.y&&d.mo&&d.d&&d.g) startGenerate();
+  }catch(e){}
+});
+
+function showExpired(days){
+  document.querySelector('.container').innerHTML=
+    '<div style="text-align:center;padding:4rem 1.5rem;max-width:420px;margin:0 auto;">'
+    +'<div style="font-size:36px;margin-bottom:1rem;">⌛</div>'
+    +'<h2 style="font-size:20px;font-weight:500;color:var(--ink);margin-bottom:.75rem;letter-spacing:.1em;">連結已過期</h2>'
+    +'<p style="font-size:14px;color:var(--ink3);line-height:1.7;margin-bottom:1.5rem;">此命盤連結的有效期（'+days+'天）已到期，<br>請聯絡命理師重新取得新的報告連結。</p>'
+    +'<button onclick="window.location.href=window.location.pathname" style="padding:10px 24px;background:var(--ink);color:var(--gold);border:none;border-radius:var(--r);font-family:inherit;font-size:13px;letter-spacing:.1em;cursor:pointer;">返回首頁</button>'
+    +'</div>';
+}
+</script>
+</body>
+</html>
