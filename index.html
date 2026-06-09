@@ -733,18 +733,33 @@ async function renderResult(baseRaw,extract){
   var basicHtml='';
   sections.forEach(function(s){
     var txt=extract(baseRaw,s.key);
+    var bid='b'+s.id;
+    var aid='a'+s.id;
     basicHtml+='<div class="acc-item">';
-    basicHtml+='<div class="acc-head" onclick="toggleBasic('b'+s.id+'','a'+s.id+'')">';
+    basicHtml+='<div class="acc-head" data-bid="'+bid+'" data-aid="'+aid+'">';
     basicHtml+='<div class="acc-dot" style="background:'+s.dot+';"></div>';
     basicHtml+='<span class="acc-title" style="color:'+s.dot+';">'+s.title+'</span>';
     basicHtml+='<span class="acc-badge '+s.badge+'">'+s.badgeTxt+'</span>';
-    basicHtml+='<span id="a'+s.id+'" style="font-size:13px;color:#9c8a6e;line-height:1;">▾</span>';
+    basicHtml+='<span id="'+aid+'" style="font-size:13px;color:#9c8a6e;line-height:1;display:inline-block;transition:transform .2s;">▾</span>';
     basicHtml+='</div>';
-    basicHtml+='<div id="b'+s.id+'" style="display:none;">';
-    basicHtml+='<p class="acc-text">'+txt+'</p>';
-    basicHtml+='</div></div>';
+    basicHtml+='<div id="'+bid+'" style="display:none;"><p class="acc-text">'+txt+'</p></div>';
+    basicHtml+='</div>';
   });
   basicAcc.innerHTML=basicHtml;
+  basicAcc.querySelectorAll('.acc-head[data-bid]').forEach(function(head){
+    head.addEventListener('click',function(){
+      var b=document.getElementById(this.dataset.bid);
+      var a=document.getElementById(this.dataset.aid);
+      if(!b)return;
+      if(b.style.display==='block'){
+        b.style.display='none';
+        if(a)a.style.transform='';
+      } else {
+        b.style.display='block';
+        if(a)a.style.transform='rotate(180deg)';
+      }
+    });
+  });
 
   if(modState.shishen){
     document.getElementById('sec-shishen').style.display='block';
