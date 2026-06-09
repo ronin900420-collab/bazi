@@ -691,7 +691,7 @@ async function startGenerate(){
     await Promise.all(tasks);
 
     setLoading('繪製報告……');
-    renderResult(baseRaw,extract);
+    await renderResult(baseRaw,extract);
   }catch(e){
     console.error(e);
     document.getElementById('loading-section').style.display='none';
@@ -700,7 +700,7 @@ async function startGenerate(){
   }
 }
 
-function renderResult(baseRaw,extract){
+async function renderResult(baseRaw,extract){
   var D=DATA;
   document.getElementById('loading-section').style.display='none';
   document.getElementById('result-section').style.display='block';
